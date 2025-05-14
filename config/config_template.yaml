@@ -1,0 +1,39 @@
+#Test template with desription and quickrun flowtest.
+
+
+environment:
+  w_num: 5                          # Number of wires (qubits) in the quantum circuit
+  t_num: 10                         # Maximal number of trainable parameters          ## To be removed in future for dynamic adjustment.
+  max_gates: 5                      # Maximum number of gates allowed in the circuit   ## Based on Helmi Q5 estimated fidelity drop 10-30 can be resonable number of gates.
+  dataset: iris                     # Dataset to use (e.g. 'iris', 'wine', 'breast_cancer', or something user load in in script)
+  epochs_for_reward: 3              # Number of epoches of gradient step to calculate reward with evaluator model. 1 is already expensive.
+  exploding_reward: False           # Whether to use exploding rewards for accuracy close to 1.
+  evaluator_learning_rate: 0.05     # Learning rate for the evaluator.
+  validation_size: 0.2              # Fraction of data for validation kept inside the environment but not trained on.
+  max_samples_per_step: 30          # Maximum number of samples from dataset per training step for the environment.
+  pl_backend: lightning.qubit       # Device for PennyLane (e.g. 'lightning.qubit', 'default.qubit') 
+
+
+agent:
+  gamma: 0.98                       # Discount factor for future rewards
+  lr: 0.0003                        # Agent's neural network learning rate
+  hidden_layers: [128, 64]          # Hidden layers of the neural network
+  buffer_size: 10000                # Size of the replay buffer (experience replay) 
+  batch_size: 5                     # Batch size when samping from replay buffer    
+  min_replay_size: 10               # Block soft update request if buffer is not filled 
+  target_sync_freq: 2               # Frequency to sync target network (in update requests)
+
+
+training:
+  test_size: 0.4                    # Fraction of data for testing kept outside the environment.
+  seed: 2137                        # Random seed for reproducibility (fix needed ?)
+  total_episodes: 10                # Total number of episodes for training
+  random_actions: False             # Completely random action for sanity check experiments
+  exploration_policy:               # Configuration for exploration strategy      ##Should it be in agent section?
+    type: epsilon_greedy            # Exploration method: 'epsilon_greedy' (or 'boltzmann' in future)
+    params:                         # Parameters specific to the exploration method
+      epsilon_start: 1.0            # Starting epsilon for epsilon_greedy
+      epsilon_end: 0.01             # Ending epsilon for epsilon_greedy
+      decay_type: linear            # Type of decay: 'linear'
+    random_fraction: 0.3            # Fraction of episodes for active exploration
+    decay_fraction: 0.4             # Fraction of episodes for exprolation with decaying randomness

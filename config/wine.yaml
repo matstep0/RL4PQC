@@ -1,0 +1,33 @@
+environment:
+  w_num: 5
+  t_num: 10
+  max_gates: 10
+  dataset: wine
+  epochs_for_reward: 1
+  exploding_reward: False
+  evaluator_learning_rate: 0.1
+  validation_size: 0.3
+  pl_backend: lightning.qubit
+
+agent:
+  gamma: 0.98
+  lr: 0.0003
+  hidden_layers: [128, 64]
+  buffer_size: 30000
+  batch_size: 64
+  min_replay_size: 10000       
+  target_sync_freq: 200 
+          
+training:
+  test_size: 0.4
+  seed: 2137
+  total_episodes: 10000
+  random_actions: False
+  exploration_policy:
+    type: epsilon_greedy
+    params:
+      epsilon_start: 1.0
+      epsilon_end: 0.01
+      decay_type: linear
+    random_fraction: 0.3    
+    decay_fraction: 0.4
