@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%files
+    ./ /opt/RL4PQC/
+
+%post
+    apt-get update && apt-get install -y git build-essential python3-dev
+
+    
+
+
+    pip install --upgrade pip
+    pip install -r /opt/RL4PQC/requirements.txt
+    pip install -e /opt/RL4PQC
+
+%runscript
+    exec "$@"
+
+
