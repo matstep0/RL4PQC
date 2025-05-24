@@ -81,12 +81,20 @@ def load_and_scale_data(dataset_name):
 
     return X_scaled, y, num_features, num_classes
 
+#Dropped at some point but example on how to create generic datasets.
 def __prepare_moons(self, data_size, noise):
     X, y = make_moons(n_samples=data_size, noise=noise)
     #y = 2 * y - 1
     scaler = MinMaxScaler((0, np.pi))
     X_scaled = scaler.fit_transform(X)
     return X_scaled, y, 2, 2
+
+def set_global_seed(seed: int):
+    np.random.seed(seed)                   # NumPy global RNG
+    torch.manual_seed(seed)                # PyTorch
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)   # PyTorch GPU (if any)
+
 
 def plot_losses_and_accuracies(train_losses, val_losses, eval_train, eval_valid, dir, stamp):
     epochs = range(1, len(train_losses) + 1)
@@ -99,17 +107,31 @@ def plot_losses_and_accuracies(train_losses, val_losses, eval_train, eval_valid,
     plt.xlabel('Epoch')
     plt.ylabel('Value')
     plt.legend()
-    plt.title('Training and Validation Curves')
+    plt.title('Training / Validation Curves')
     plt.show()
+    png_path = os.path.join(dir, f"losses_accuracies_{stamp}.png")
     plt.savefig(os.path.join(dir, f"losses_accuracies_{stamp}.png"))
+    plt.close()
+    print(f"[INFO] Plot saved → {png_path}")
+
+    data = {
+        "epochs"        : list(epochs),
+        "train_losses"  : [float(v) for v in train_losses],
+        "val_losses"    : [float(v) for v in val_losses],
+        "train_accuracy": [float(v) for v in eval_train],
+        "val_accuracy"  : [float(v) for v in eval_valid],
+    }
+
+    json_path = os.path.join(dir, f"losses_accuracies_{stamp}.json")
+    with open(json_path, "w") as f:
+        json.dump(data, f, indent=4)
+    print(f"[INFO] Raw data saved → {json_path}")
     
-#Evalute final circuit with better training and accuracy
-def train_and_evaluate():
-    
-    pass
+
 
 # Main function to load configuration and execute training
-def main(config_path, store_directory):
+def main(config_path, store_directory, agent_weights):
+    
     # Load the YAML configuration
     config = load_config(config_path)
     
@@ -120,8 +142,8 @@ def main(config_path, store_directory):
     
     test_size = config['training']['test_size']
     seed = config['training']['seed']
-    #Actually try use a 'global seed' dark spell and eventually pass them to class? 
-
+    set_global_seed(seed)        #! Important for reproducibility
+    
     # Setup storage directory
     dataset_name = env_params['dataset']
     dir=store_directory
@@ -136,6 +158,13 @@ def main(config_path, store_directory):
     stamp = generate_filestamp(dataset_name)
     dir = os.path.join(dir, stamp)
     os.makedirs(dir, exist_ok=True)
+    
+    #Copy config file
+    output_file = f"{dir}/config.json"
+    with open(output_file, 'w') as f:
+        json.dump(config, f, indent = 4)
+    
+    
     
     # Prepare data
     X_scaled, y, num_features, num_classes = load_and_scale_data(dataset_name)
@@ -156,7 +185,7 @@ def main(config_path, store_directory):
         num_classes=num_classes,
         max_gates=env_params['max_gates'],
         dataset=env_params['dataset'], #Pytroch loarder would be much better here....
-        seed=seed,   #to be checked if work
+        seed=seed+2,   #to be checked if work
         epochs_for_reward=env_params['epochs_for_reward'],
         exploding_reward=env_params['exploding_reward'],  #for testing some idea...
         evaluator_learning_rate=env_params['evaluator_learning_rate'],  # Learning rate for the evaluator model.
@@ -184,9 +213,17 @@ def main(config_path, store_directory):
         buffer_size = best_buffer_size,
         target_sync_freq = agent_params['target_sync_freq'],        
         min_replay_size = agent_params['min_replay_size'],
-        seed=seed,
+        seed=seed+1,
         device="cpu",
         )
+    #Use transfer learning and load previous model.
+    print("\n Trying to load parameters")
+    try:
+        agent.load_weights(agent_weights)
+        print(f"Agent weight loaded successfully from {weight_path}")
+    except Exception as e:
+        print(f"Error: {e}. Agent weights were not fetched, initialization will be random.")
+
 
     # Initialize the trainer
     trainer = AgentTrainer(
@@ -245,22 +282,33 @@ def main(config_path, store_directory):
           {res['circuit']},")
     
     
+    #--------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #Fine tune final circuit to see how good is the architectecture
+    #--------------------------------------------------------------------------------------------------------------
+    
     #Train also on random parameters? !!!
     #Train the final best circuit(s) on more epoches? Maybe store top X circuits?
     #train_and_evaluate(circuit_data)
-    epochs_for_final_training = 20
+    epochs_for_final_training = 20          #ugly harcoded, but shall it be another config file?, will it confuse the user more? 
     lr_for_final_training = 0.02
     #Initialize the generator
     pqc_generator = RandomPQCGenerator(w_num=env_params['w_num'], 
                                             x_num=num_features,
                                             t_num=env_params['t_num'], 
-                                            seed=seed, 
+                                            seed=seed+3, 
                                             architecture=HelmiArchitecture(), 
                                             max_gates=env_params['max_gates'],
                                             )
     #Load circuit with generator PQCgen
+    
+    
+    circuit_data_random_params = circuit_data.copy()
+    circuit_data_random_params["params"] = np.random.uniform(0, np.pi, size=len(circuit_data["params"])).tolist()
+    circuit_data_random_params["accuracy"] = None    
+
     pqc_generator.load_circuit(circuit=circuit_data['circuit'])  # you can also load a circuit from a file
     
+        
     #Initialize the evaluator and optimize the circuits.
     model = PQCEvaluator(
         n_wires=env_params['w_num'],
@@ -268,8 +316,8 @@ def main(config_path, store_directory):
         params_num=env_params['t_num'],
         num_classes=num_classes,
         generator=pqc_generator,
-        seed=seed,
-        init_params=circuit_data['params'], #Load params from the best circuit or start with random ones.
+        seed=seed+7,                        
+        init_params=circuit_data_random_params["params"], #Load params from the best circuit or start with random ones.
         lr=lr_for_final_training,
         device_name=env_params['pl_backend'],   # arguments dictionary for more flexibility ?
     )
@@ -298,19 +346,21 @@ def main(config_path, store_directory):
     }
     save_circuit(dir, stamp=f"{stamp}_finetuned", circuit_data=circuit_data)  # save cirquit
     
+    
     print("Goodbye world!")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for RL4PQC experiments. Provide configuration file and storage directory.")
     parser.add_argument("--config_file", type=str, required=True, help="Path to the configuration file")
     parser.add_argument("--store_directory", type=str, required=False, default=".", help="Path to the storage directory.")
+    parser.add_argument("--agent_weights", type=str, required=False, default=None, help="Path to pretrained weights")
     args = parser.parse_args()
 
     #Wrapper would be nice
     if use_profiler: 
         profiler = cProfile.Profile()
         profiler.enable()    
-    main(args.config_file, args.store_directory)      #Execute main scirpti
+    main(args.config_file, args.store_directory, args.agent_weights)      #Execute main scirpti
     if use_profiler:
         profiler.disable()
 

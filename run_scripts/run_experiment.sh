@@ -7,13 +7,14 @@
 #SBATCH --mem-per-cpu=2G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=10:00:00
-#SBATCH --export=CONFIG_PATH,STORE_DIR,CONTAINER   # Export custom variables
+#SBATCH --export=CONFIG_PATH,STORE_DIR,CONTAINER,AGENT_WEIGHTS   # Export custom variables
 
 
 # fallback: if env var is unset or empty, use positional
 CONFIG_PATH=${CONFIG_PATH:-$1}
 STORE_DIR=${STORE_DIR:-$2}
 CONTAINER=${CONTAINER:-$3}
+AGENT_WEIGHTS=${AGENT_WEIGHTS:-$4}
 #export OMP_NUM_THREADS=4 # CPU threads 
 
 
@@ -23,14 +24,31 @@ if [[ -z "$CONFIG_PATH" || -z "$STORE_DIR" || -z "$CONTAINER" ]]; then
     exit 1
 fi
 
+
+# Print resolved configuration
+echo "Resolved configuration:"
+echo "  CONFIG_PATH   = $CONFIG_PATH"
+echo "  STORE_DIR     = $STORE_DIR"
+echo "  CONTAINER     = $CONTAINER"
+echo "  AGENT_WEIGHTS = $AGENT_WEIGHTS"
+echo  
+
+
 START_TIME=$(date +%s)
 
+
 singularity exec \
-    --bind "$(pwd)":/mnt \
-    "$CONTAINER" \
-    python3 ./run_scripts/rloop.py \
-      --config_file "$CONFIG_PATH" \
-      --store_directory "$STORE_DIR"
+  --bind $PWD:/workspace \
+  --pwd  /workspace \
+  "$CONTAINER" \
+  bash -c 'export PYTHONPATH=/workspace &&
+           python3 run_scripts/rloop.py \
+             --config_file     "'"$CONFIG_PATH"'" \
+             --store_directory "'"$STORE_DIR"'" \
+             --agent_weights   "'"$AGENT_WEIGHTS"'"'
+
+
+
 
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
