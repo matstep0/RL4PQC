@@ -45,7 +45,6 @@ class PQCEvaluator():
         
         # Define seed generator
         self.seed = seed if seed is not None else np.random.randint(0, 2137) 
-        ic(np.random.seed(self.seed))  #Track randomness in debug
         def seed_generator(start_seed):
             current_seed = start_seed
             while True:
