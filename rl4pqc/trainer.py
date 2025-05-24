@@ -120,11 +120,13 @@ class AgentTrainer:
             
             # Update the agent's policy after random exploration phase
             if episode == self.random_episodes: #End of random phase - one time bigger update
+                print("Performing major update after random phase....")
                 reuse = self.reuse_sample_after_random_phase  
                 buffer_len = self.agent.replay.__len__()
                 offline_updates = int(np.ceil(reuse * buffer_len / self.agent.batch_size))   #Statisticly make each sample be 'reuse' times
                 for _ in range(offline_updates):
                     self.agent.update_policy(force_update=True)
+                print("..finished")
             
             # Update the agent's policy each episode
             if episode > self.random_episodes:

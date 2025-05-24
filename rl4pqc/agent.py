@@ -30,7 +30,8 @@ import numpy as np
 #Debug 
 from icecream import ic
 #ic.enable()
-ic.disable()
+#ic.disable()
+
 
 # --------------------------------------------------------------------------- #
 #  Replay Buffer
@@ -105,7 +106,6 @@ class DQNAgent:
         device: str = None,
         seed: int = None,
     ):
-    
         self.device = torch.device(device or "cpu")
         self.seed = seed  
         rng = np.random.default_rng(self.seed)
@@ -169,6 +169,7 @@ class DQNAgent:
 
     # ---------- learning ---------- #
     def update_policy(self, force_update=False):
+
         """Update Q‑network using a mini‑batch from replay buffer."""
         
         # 1. safety first
@@ -193,14 +194,17 @@ class DQNAgent:
         done_batch       = done_batch.to(self.device)
         ic(state_batch.shape, action_batch.shape, reward_batch.shape, next_state_batch.shape, done_batch.shape)
         # 4. compute current Q(s,a)
-        current_q_values = self.online_net(state_batch)
-        ic(current_q_values)
+        all_q = self.online_net(state_batch)                      # (B, |A|)
+        current_q_values = all_q.gather(1, action_batch)          # -> (B, 1)        
 
         # 5. compute target values
         target_q_values = self._td_target(reward_batch, next_state_batch, done_batch)
 
+
         # 6. back‑prop & optimiser step
+        #Huber loss regularization and gradient clipping are potential optimization (two lines actually).
         loss = self.criterion(current_q_values, target_q_values)
+        
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
