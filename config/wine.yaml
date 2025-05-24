@@ -13,14 +13,13 @@ agent:
   gamma: 0.98
   lr: 0.0003
   hidden_layers: [128, 64]
-  buffer_size: 30000
+  buffer_size: 50000
   batch_size: 64
-  min_replay_size: 10000       
+  min_replay_size: 1000       
   target_sync_freq: 200 
           
 training:
   test_size: 0.4
-  seed: 2137
   total_episodes: 10000
   random_actions: False
   exploration_policy:
@@ -29,5 +28,6 @@ training:
       epsilon_start: 1.0
       epsilon_end: 0.01
       decay_type: linear
-    random_fraction: 0.3    
-    decay_fraction: 0.4
+    random_fraction: 0.33    
+    decay_fraction: 0.33
+  seed: 2137
