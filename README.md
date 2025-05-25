@@ -1,6 +1,6 @@
 # RL4PQC
 
-*A project for reinforcement learning assisted automation of discovering parametric quantum circuits (PQC)  that solve classical machine‑learning classification tasks on user‑defined quantum architecture with real restrictions.*
+*A project for reinforcement learning assisted automation of discovering parametric quantum circuits (PQCs) that solve classical machine‑learning classification tasks on user‑defined quantum architecture with real restrictions.*
 
 RL4PQC implements a Deep‑Q agent with a custom Gym environment that builds, trains and evaluates a quantum circuit on‑the‑fly (easily connectable for other pipelines and standard agent implementations through the OpenAI Gym package API). Over many episodes the agent learns which quantum gates to apply on which qubits, forming a problem-dependent architecture.
 
