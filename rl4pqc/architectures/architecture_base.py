@@ -91,6 +91,8 @@ class QuantumArchitecture:
 
             elif wn == 2:                                  # two-qubit gates
                 for edge in self.active_coupling_map:      # directed list
+                    #micro fuckup - some gates (like CZ are symetric and 2q action is duplicated.. )
+                    # possibly modify actionspec by symetric=true or check.
                     actions.append(self.ActionSpec(gname, edge))
 
             else:                                          # >2-qubit not yet
