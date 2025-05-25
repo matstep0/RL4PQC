@@ -38,13 +38,13 @@ graph LR
 
 | File                      | Main Class                       | Desription                                                        |
 | ------------------------- | ------------------------------------------ | --------------------------------------------------------------------- |
-| **architecture\_base.py** | `QuantumArchitecture`                      | Abstract base class: native gates, wires, coupling map; produces RL actions |
+| **architecture\_base.py** | `QuantumArchitecture`                      | Abstract base class for general operation on native gates, wires, coupling map; producing RL actions |
 | **helmi5q.py**            | `HelmiArchitecture`                        | Helmi5Q architecture (Phased‑RX & CZ)                         |
 | **pqcgen.py**             | `PQGSampler`, `RandomPQCGenerator`         | Sample and maintain the evolving quantum circuit                      |
-| **pqceval.py**            | `PQCEvaluator`                             | Build QNode, train parameters, measure accuracy                       |
-| **env.py**                | `QuantumCircuitEnv`                        | Gym‑style env governed by ****step()**** and ****reset()****. (State , action) → (next\_state, reward)                 |
-| **agent.py**              | `ReplayBuffer`, `DeepQNetwork`, `DQNAgent` | RL agent implementation                                               |
-| **trainer.py**            | `AgentTrainer`                             | Run episodes, schedule exploration, collect rundata                          |
+| **pqceval.py**            | `PQCEvaluator`                             | Build QNode, optimize parameters, measure accuracy                       |
+| **env.py**                | `QuantumCircuitEnv`                        | Gym‑style env governed by ****step()**** and ****reset()**** API. (State , action) → (next\_state, reward)                 |
+| **agent.py**              | `ReplayBuffer`, `DeepQNetwork`, `DQNAgent` | DQN agent implementation                                               |
+| **trainer.py**            | `AgentTrainer`                             | Run episodes, schedule exploration, collect rundata.                          |
 | **rloop.py**              | `main`                                     | "One to rule them all"                     |
 
 ---
@@ -103,7 +103,7 @@ Each run creates a timestamped folder under STORE_DIR that holds everything you 
 ### 3. Further tweaking
 
 #### Config
-A minimal working file with brief description of each hyperparameter is available at config/config_template.yaml; copy it and tweak the few fields.
+A minimal working file with brief description of each hyperparameter is available at config/config_template.yaml; copy it and tweak the fields.
 That file serves only as quick test run. A truly “optimal” config schema will depend on ongoing experimentation, check the files for experiments too lookup for example config. Note that with extensive numbers of hyperparameters this is not easily achievable and training is resource-intensive. 
 
 #### Plugging in a new quantum architecture
