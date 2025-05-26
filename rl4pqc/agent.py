@@ -178,6 +178,9 @@ class DQNAgent:
         if  self.replay.__len__() < self.min_replay_size and not force_update:
             warning.warn("Replay buffer not full yet, skipping update. Add more samples or force update.")
             return
+        if self.batch_size > self.replay.__len__():
+            warning.warn("Replay buffor has to few samples, this update step failed gracefully")
+            return
 
         # 2. sample mini‑batch
         (state_batch,

@@ -131,6 +131,7 @@ class AgentTrainer:
             # Update the agent's policy each episode
             if episode > self.random_episodes:
                 self.agent.update_policy(force_update=False)
+            
 
         print(f"Best accuracy score: {best_max_accuracy}")
         return {'circuit': best_circuit,
