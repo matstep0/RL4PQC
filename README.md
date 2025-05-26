@@ -112,3 +112,4 @@ Generic action set can be created automatically. Some additional improvement in 
 
 #### Implementation of parallelization and GPU usage
 LUMI architecture is suitable to speed up things with pararrel experience collection (CPU multithreading) or obligatory simulation speedup for larger circuits (diffrent pennylane device or whole diffrent backend would be needed for this)
+
