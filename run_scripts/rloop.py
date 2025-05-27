@@ -5,7 +5,6 @@ import json
 import sys
 from datetime import datetime
 
-
 #Data
 import numpy as np
 import torch 
@@ -222,7 +221,9 @@ def main(config_path, store_directory, agent_weights):
         agent.load_weights(agent_weights)
         print(f"Agent weight loaded successfully from {weight_path}")
     except Exception as e:
-        print(f"Error: {e}. Agent weights were not fetched, initialization will be random.")
+        print(f"WARNING: Fetched error {e} when trying to load weights. \
+              Agent weights were not fetched, initialization will be random. \
+              If you intend to train from scrach this is desired behaviour.")
 
 
     # Initialize the trainer
@@ -365,5 +366,5 @@ if __name__ == "__main__":
         profiler.disable()
 
         stats = pstats.Stats(profiler)
-        stats.sort_stats('cumtime')     # sortowanie według skumulowanego czasu
-        stats.print_stats(20)           # wyświetli najwolniejszych funkcji
+        stats.sort_stats('cumtime')     # Sort by cumulative time
+        stats.print_stats(20)           # Print last 20
