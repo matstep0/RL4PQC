@@ -12,7 +12,7 @@ In supervised quantum ML, PQCs transform an initial state $|0\rangle^{\otimes n}
 
 We measure the expectation values of the Pauli $Z$ operator on the first $L$ qubits to obtain the score vector:
 $$
-f_i(x,\theta) = \langle 0|^{\otimes n} \, U^\dagger(x,\theta) \, Z_i \, U(x,\theta) \, |0\rangle^{\otimes n}, \quad \text{for } i=1,\dots,L.
+f_i(x,\theta) = \langle 0|^{\otimes n} \, U^\dagger(x,\theta) \, Z^{(i)} \, U(x,\theta) \, |0\rangle^{\otimes n}, \quad \text{for } i=1,\dots,L.
 $$
 The predicted class is then given by:
 $$
@@ -24,7 +24,7 @@ Similar framework is presented in [^sqml-framework].
 It is important to note that the performance of the circuit highly depends on the chosen ansatz $U(x,\theta)$ and choice of trainable parameters $\theta$. Every unitary must be implemented as a sequence of simple gates from a *universal gate set* [^nielsen-chuang] that is hardware dependent. With current hardware length of circuit is severely limited by errors that quickly destroy information. We elaborate on real hardware limitations taking HelmiQ5 as example.
 
 
-## Hardware Constraints on HelmiQ5
+## Hardware Constraints on VTT Q5 "Helmi"
 
 When implementing PQCs on real quantum hardware, we must respect the real-device constraints. On the Helmi quantum computer, only a specific set of native gates along with a specific coupling map is available. 
 Helmi is built with a star-shaped topology a central qubit (QB3) is connected to all outer qubits (QB1, QB2, QB4, QB5), meaning that two-qubit interactions are only directly possible between QB3 and any outer qubit.
@@ -85,7 +85,7 @@ However,  worst case scenario for middle Q3 qubit, with the worst decoherence ti
 
 Reinforcement Learning (RL) is a framework where an **agent** learns to make decisions by interacting with an **environment**. The agent chooses an **action**, receives a **reward**, and observes the new **state** of the environment. Over time, it aims to discover a **policy** that maximizes cumulative reward. 
 
-![fig:rl-loop]
+![RL][fig:rl-loop]
 
 
 This paradigm has been successfully applied to complex tasks, such as mastering Atari games from raw pixels — where agents trained purely via RL achieved human-level performance. [^atari]
@@ -93,7 +93,7 @@ This paradigm has been successfully applied to complex tasks, such as mastering 
 In our case, we use RL to **automate the discovery of quantum circuits anzatz**, treating each gate placement as a decision made by the agent.
 
 
-In this framework, building PQCs become a **sequential decision problem**, with neural network acting as agent exploring certain MDP. It shall be noted that 'choose random action' algorithm is a valid agent which can produce some good solutions. But with RL we aim to explore space in better way; to produce good solutions most of the time or find better one hardly achievable for random search. The latter is achived in simmilar work that appeard recenlty[^rl-architecture-search].
+In this framework, building PQCs become a **sequential decision problem**, with neural network acting as agent exploring certain (partiallly observable) markov decision process. It shall be noted that 'choose random action' algorithm is a valid agent which can produce some good solutions. But with RL we aim to explore space in better way; to produce good solutions most of the time or find better one hardly achievable for random search. The latter is achived in simmilar work that appeard recenlty[^rl-architecture-search].
 
 
 ### RL Theory: Value Functions and the Bellman Equation
@@ -161,7 +161,6 @@ Parallelized Experience Collectionmention that this optimization is very feasibl
 In practice, achieving state-of-the-art performance in ML requires a careful orchestration of many methods along with extensive experimentation on hyperparameter tuning and often code profiling. Testing and comparing these enhancements will bring us closer to fully automated, high-performance quantum circuit design.
 -->
 
----
 
 ## Experiments on LUMI
 In this experiment, we conduct a series of trials using three distinct toy datasets. Each dataset is stratifyly splited into train/test parts with ratio 60/40. Test dataset is keep away and only train part is fetch into simulation. Train part is further split the same way into training/validation set, where training part is used for circuit parameters optimization and validation to estimate accuracy of circuit determining scalar reward passed to agent. 
@@ -179,26 +178,26 @@ Phased-RX gate carries two unnkown parameters, one feature and one trainable par
 
 Training proceeds in three sequential phases which we chose to be around the same number of epoches.
 
-**Random benchmark**: for a fixed number of episodes, the agent picks every gate uniformly at random, building circuits up to the maximum length. All resulting transitions populate the initial replay buffer.
+- **Random benchmark**: for a fixed number of episodes, the agent picks every gate uniformly at random, building circuits up to the maximum length. All resulting transitions populate the initial replay buffer.
 
-**ε-Greedy learning:** we anneal ε linearly from 1.0 to 0.01, mixing exploration (random actions) with exploitation (choosing the highest-Q action) and updating the Deep Q-Network online after each episode (sampling from experience buffer).
+- **ε-Greedy learning:** we anneal ε linearly from 1.0 to 0.01, mixing exploration (random actions) with exploitation (choosing the highest-Q action) and updating the Deep Q-Network online after each episode (sampling from experience buffer).
 
-**Deterministic phase:**  the trained policy deterministically grows circuits (while still trying to learn); we record the final validation accuracy along with circuits from whole training and save rewards obtained by agent through whole training.
+- **Deterministic phase:**  the trained policy deterministically grows circuits (while still trying to learn); we record the final validation accuracy along with circuits from whole training and save rewards obtained by agent through whole training.
 
 After whole training we take the best circuit architecture, than train it again on whole training dataset against test part separated at the start. 
 
 ## Results
 
-Below we demonstrate some examples of circuit layouts that achieve good scores, followed by training curves, and trace of architectures search.
+Below we demonstrate some examples of circuit layouts that achieve good scores on previously separated test part (40% data), followed by training curves, and trace of architectures search.
 A full RL reward trace is tucked into an appendix for readers interested in the agent’s learning behaviour.
 
 ### 1&nbsp;·&nbsp;Datasets and achived final test accuracy  
 
-| Dataset        | #Samples | #Features | #Classes | Test Accuracy |
+| Dataset        | #Samples | #Features | #Classes | Test Accuracy  |
 |----------------|---------:|----------:|---------:|--------------:|
-| Iris           | 150      | 4         | 3        | **TODO**      |
-| Wine           | 178      | 13        | 3        | **TODO**          |
-| Breast Cancer  | 569      | 30        | 2        | **TODO**          |
+| Iris           | 150      | 4         | 3        | 0.91      |
+| Wine           | 178      | 13        | 3        | 0.85          |
+| Breast Cancer  | 569      | 30        | 2        | 0.62          |
 
 *Table&nbsp;1 – Dataset statistics and the final test accuracy of the found circuits.*
 
@@ -208,72 +207,64 @@ A full RL reward trace is tucked into an appendix for readers interested in the 
 
 | Dataset | Circuit diagram |
 |---------|-----------------|
-| **Iris** | <img src="figures/circuit_iris.png" width="90%"> |
-| **Wine** | <img src="figures/qc_wine_20250524_231750.svg" width="90%"> |
-| **Breast-Cancer** | <img src="figures/circuit_bc.png" width="90%"> |
+| **Iris** | <img src="results/iris/iris_20250526_171512/qc_iris_20250526_171512.svg" width="90%"> |
+| **Wine** | <img src="results/wine/wine_20250526_172332/qc_wine_20250526_172332.svg" width="90%"> |
+| **Breast-Cancer** | <img src="results/breast/breast_cancer_20250526_175042/qc_breast_cancer_20250526_175042.svg" width="90%"> |
 
-*Table&nbsp;2 – Example circuit architectures getting high performance on toy dataset. Blocks of (RZ|RX|RZ) represent native phased-RX gate.*
+*Table&nbsp;2 – Example circuit architectures getting high performance on toy dataset. Blocks of (RZ|RX|RZ) represent native phased-RX gate. Middle qubit is represented by 2->QB3*
 
 ---
 
 ### 3&nbsp;·&nbsp;Training / validation curves  
 
+
+<p align="center">
+<img src="results/iris/iris_20250526_171512/losses_accuracies_iris_20250526_171512.png" width="31%">
+<img src="results/wine/wine_20250526_172332/losses_accuracies_wine_20250526_172332.png" width="31%">
+<img src="results/breast/breast_cancer_20250526_175042/losses_accuracies_breast_cancer_20250526_175042.png" width="31%">
+</p>
+<!--
 <p align="center">
   <img src="figures/train_val_iris.png" width="31%">
   <img src="figures/losses_accuracies_wine_20250524_231750.png" width="31%">
   <img src="figures/train_val_bc.png"   width="31%">
 </p>
+-->
 
-*Fig.&nbsp;2 – Loss and accuracy during 20 epochs of parameter optimization with gradient descent. Iris, Wine, Breast Cancer, respectively.*
+*Fig.&nbsp;2 – Loss and accuracy during 20 epochs of parameter optimization on presented circuits with gradient descent. Iris, Wine, Breast Cancer, respectively.*
 
 ---
 
 ### 4&nbsp;·&nbsp; RL average-reward trace  
 
-<p align="center">
-  <img src="figures/reward_iris.png" width="48%">
-  <img src="figures/reward_wine.png" width="48%">
-  <img src="figures/reward_breast.png" width="48%">
+<p align="center"> 
+<img src="results/iris/iris_20250526_171512/avg_reward_rewards_iris_20250526_171512.png" width="31%"> 
+<img src="results/wine/wine_20250526_172332/avg_reward_rewards_wine_20250526_172332.png" width="31%"> 
+<img src="results/breast/breast_cancer_20250526_175042/avg_reward_rewards_breast_cancer_20250526_175042.png" width="31%"> </p>
 
-</p>
-
-*Fig.&nbsp;3 – Episode-average rewards across all episodes; dashed lines separate random/e-greedy/deterministic phases.*
+*Fig.&nbsp;3 – Episode-average rewards across all episodes; dashed lines separate random/e-greedy/deterministic phases. Note that while plot for breast cancer seems like improvement the found circuit perform the worse. The reason is probably subsumpling in training and validation which was used to speed up simulation.*
 
 
+## Conclusions
+**Automatic architecture search - even random - can be feasible.**
+We demonstrated that automated, hardware‑aware architecture search can work. By incorporating HelmiQ5’s star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations shows that even shallow circuits are supposed to solve simple tasks. This examples could potentially serve as **benchmark task** for current and near-term hardware. Some loss of accuracy is expected on the real chip, but QML models may show up - simmilar way as some ML models - natural tolerance to noise. Beside, with ML we usually satisfied with "good enough" solution.
+
+**Computation cost is dominated by quantum simulation.** 
+Training over 50000 epochs (which is not much in context of RL) requires 1-2 day on a single CPU. Upon profiling, computation time is dominated by quantum simulator; each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires ≈2 000 state-vector simulations.  Scaling to larger qubit counts or deeper circuits will therefore require parallel experience collection and multi-GPU (or multi-node) distributed simulations, all of which LUMI’s architecture can support. 
+<!-- Due to hardeness of quantum simulation first approach may be apporximation methods (mcmc ?, tensor networks?) -->
+<!-- but small circuits up to soft boundary of 20 qubits does not benefit much as GPU speedup is killed by overheads, for small circuits default python non-optimized device is a good choice.
+-possible project road -> pc simulation, cluster simulation, (scallable) qunatum at the end -->
+
+**Check you quantum software**
+
+We found that Pennylane backend simulator does not support vector-state distribution on multiple AMD-GPU, but only for Nvidia. We highligh importance of veryfing veryfing possibilities of software and integration with diffrent backend to provide backup backend in case of unpredicted problems.  
+
+Next topic we would like to touch is containerization.
+As lumi need to be efficient by many users minimal setup is available, contenarization provide a convinient solution for creating environment on HPC infrastructures and, while complicated to setup - can simplify workflow later. 
+For example scheduling work in project required only setting few environmental variables and running proper sbatch script, all extra steps that are typically required for setup can be encapsulated witing container definition.  Moreover this  approach does not rely on software installed on lumi and can be customized for specific needs when providing high level of control with fake-sudo privilages. It is also feasible if software need to be compiled from source which may happen with maturing quantum software.
 
 
-## Experiments on LUMI
-- mention train test and train validation split
-- general iteration for each epoch is construction of sequence of circuits up to lenght some lenght
-- 
-- not so many experiment and architecture is rather easy to be randomly sampled
-- put some plots accuracies of result for diffrent dataset and get some plots for finalna training for architecture we have found.
-- mention cost of executing circuits taking the most part of the tranining and very unfeasible scaling.
-- number of circuit execution - step x epoch x data size ~ 50000 (typical RL?) x  ~100-1000 ...take 200 points = 10^7
-- 1day of training - 115 circuit pers secs 
-factor from number of points make is much bigger than standard problem of energy estimation. Number of executions scales really bad.
-So if someone made it in few days (step x epoch iterations) training with efficient software it would take a year to train unless execute on many cpus. (Only way to do it?)
 
--- hard to get reasonable amount of data and we are using only small dataset.
-
-
-# Conclusions
--Dominują symulacje środowiska kwantowego
-- quantum algoriths need to be tested but quantum outputs are hardly interpretable, feasible to run start with classical simulations 
-- Major problem with rl4pqc is need for simulating many quantum circuits which pose a compuational chalange, even for small circuits it comes with significant overhead and rl need many samples. 
-In this case multithreading for simulations and many nodes utilization may be feasible for utilizing LUMI resources when dealing with RL for larger circuits in general
-
-- Qunatum software need to support mutlthereading and gpu execusion and state vector spreading, and support multiple architectures of CPU and GPU. (not yet for pennylane)
-
-- Due to hardeness of quantum simulation first approach may be apporximation methods (mcmc ?, tensor networks?)
-
-- but small circuits up to soft boundary of 20 qubits does not benefit much as GPU speedup is killed by overheads, for small circuits default python non-optimized device is a good choice.
--possible project road -> pc simulation, cluster simulation, (scallable) qunatum at the end
--due to restirction on supercomputer (file quota, lack of sudo and software) containers are feasible solution to enable project execution on HPC 
-
--need to simulate circuit for every data point make it many circuit simulations... good for paralerization ? --estimate the number of qunatum circutis to run proper RL
-
-- for a single task RL takes whole lot so we need a good reason and there is not point to do it for scrach for single optimal architecture- need for foundationa models and fine-tune-reinforcement learning in quantum architecture transformer? 
 
 
 ## Ackowledges
@@ -288,7 +279,7 @@ We thank Nicolaus Copernicus Astronomical Center of the Polish Academy of Scienc
 [^vadali]: Vadali, A., Kshirsagar, R., Shyamsundar, P. et al. Quantum circuit fidelity estimation using machine learning. Quantum Mach. Intell. 6, 1 (2024). https://doi.org/10.1007/s42484-023-00121-4
 [^zyczkowski-fidelity]: N. S. Sáenz de Buruaga, R. Bistroń, M. Rudziński, R. M. C. Pereira, K. Życzkowski, and P. Ribeiro, “Fidelity decay and error accumulation in random quantum circuits,” *arXiv preprint* arXiv:2404.11444, 2024. [Link](https://arxiv.org/abs/2404.11444)
 [^vtt2024]: “HelmiQ5 device specs,” VTT Quantum Computer Documentation, Dec. 17 2024 [Link](https://vttresearch.github.io/quantum-computer-documentation/helmi/).  
-[^atari]: V. Mnih *et al.*, “Human-level control through deep reinforcement learning,” *Nature*, **518**, pp. 529–533, 2015. [Link](https://api.semanticscholar.org/CorpusID:205242740)
+[^atari]: V. Mnih *et al.*, “Human-level control through deep reinforcement learning,” *Nature*, **518**, pp. 529–533, 2015. [Link](https://www.nature.com/articles/nature14236)
 
 
 <!--Figures -->
