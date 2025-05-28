@@ -1,16 +1,16 @@
 # Reinforcement-Learning-Assisted Search for Quantum-Machine-Learning Circuit Architectures
 
-*Classical machine learning (ML) models for classification typically learn to map input features $x$ to output scores $f(x)$ (often interpreted as unnormalized probabilities), using ansatz function approximations such as neural networks. While effective in many domains, classical models are inherently limited by their computational space. In contrast, quantum computing leverages the exponential growth of the state space of quantum system. An $n$-qubit system spans a Hilbert space of dimension $2^n$. Such exponential scaling offers a promising route to capture and process complex data patterns more efficiently and is an active area of research.*
+*Classical machine learning (ML) models for classification typically learn to map input features $x$ to output scores $f(x)$ (often interpreted as unnormalized probabilities), using ansatz function approximations such as neural networks. While effective in many domains, classical models are inherently limited by their computational space. In contrast, quantum computing leverages the exponential growth of the state space of a quantum system. An $n$-qubit system spans a Hilbert space of dimension $2^n$. Such exponential scaling offers a promising route to capture and process complex data patterns more efficiently and is an active area of research.*
 
 Utilization of Reinforcement Learning (RL) for Parametrized Quantum Circuits (PQCs) creation is currently being explored in the literature [^ostaszewski] [^rl-architecture-search].
-We have set a goal of implementing a search algorithm based on RL capable of finding an efficient PQC ansatz; feasible for performing classification, while incorporating real hardware restrictions like coupling map and built-in gate set. We tested the approach on several toy-datasets from the sklearn package.
+We have set a goal of implementing a search algorithm based on RL capable of finding an efficient PQC ansatz; feasible for performing classification, while incorporating real hardware restrictions like coupling map and built-in gate set. We tested the approach on several  datasets from the sklearn package.
 <!-- We could also easily test obtained result on a real accesible quantum hardware but there is not time :( -->
 
 ## Supervised Quantum Machine Learning with PQCs
 
-In supervised quantum machine learning (QML), PQC transform an initial state $|0\rangle^{\otimes n}$ using a unitary operator $U(x,\theta)$ that depends on both input $x$ and tunable parameters $\theta$. 
+In supervised quantum machine learning (QML), PQCs transform an initial state $|0\rangle^{\otimes n}$ using a unitary operator $U(x,\theta)$ that depends on both input $x$ and tunable parameters $\theta$. 
 
-We measure expectation values of the Pauli $Z$ operator on the first $L$ qubits, where $L$ is number of classes, to obtain the scores vector:
+We measure expectation values of the Pauli $Z$ operator on the first $L$ qubits, where $L$ is number of classes, to obtain the score vector:
 $$
 f_i(x,\theta) = \langle 0|^{\otimes n} \, U^\dagger(x,\theta) \, Z^{(i)} \, U(x,\theta) \, |0\rangle^{\otimes n}, \quad \text{for } i=1,\dots,L.
 $$
@@ -21,13 +21,13 @@ $$
 
 Similar framework is also presented in [^sqml-framework].
 
-It is important to note, that the performance of the circuit depends heavily on the chosen ansatz $U(x,\theta)$ and choice of trainable parameters $\theta$. Every unitary must be implemented as a sequence of simple gates from a *universal gate set* [^nielsen-chuang], that is hardware dependent. With current hardware the length of a circuit is severely limited by errors that quickly destroy information. We elaborate on real hardware limitations on HelmiQ5 as example.
+It is important to note that the performance of the circuit depends heavily on the chosen ansatz $U(x,\theta)$ and choice of trainable parameters $\theta$. Every unitary must be implemented as a sequence of simple gates from a *universal gate set* [^nielsen-chuang], that is hardware dependent. With current hardware the length of a circuit is severely limited by errors that quickly destroy information. We elaborate on real hardware limitations on HelmiQ5 as example.
 
 
 ## Hardware Constraints on VTT Q5 "Helmi"
 
 When implementing PQCs on real quantum machine, we must respect the hardware constraints. On the *Helmi* quantum computer, only a specific set of native gates along with a specific coupling map is available. 
-*Helmi* is built with a star-shaped topology a central qubit (QB3) is connected to all outer qubits (QB1, QB2, QB4, QB5), meaning that two-qubit interactions are only directly possible between QB3 and each outer qubit.
+*Helmi* is built with a star-shaped topology, with a central qubit (QB3) connected to all outer qubits (QB1, QB2, QB4, QB5), meaning that two-qubit interactions are only directly possible between QB3 and each outer qubit.
 <!--![HelmiQ5][fig:helmi]-->
 <img src="figures/helmi-topology.png" alt="Description">
 
@@ -78,7 +78,7 @@ Thus, after approximately 14 two-qubit gates, fidelity drops below 50%, making t
 <!--Since PQCs typically involve both single-qubit and two-qubit gates, assuming a roughly uniform distribution on typical circuit, we conclude that circuits on Helmi should be shallow circuit of ~20 total gates in total.-->
 
 There is another important factor due to qubit's relaxation times. 
-However, in the worst case scenario for middle Q3 qubit, the worst decoherence time is $\approx 10\mu s$, while gates performances around $ 100-120$ ns. It is still giving much softer limits on $~80$ gates (while most of the qubits have higher times), so we can neglect it here.
+However, in the worst case scenario for the middle Q3 qubit, the worst decoherence time is $\approx 10\mu s$, while gate execution time is around $100-120$ ns. It is still giving much softer limits on $~80$ gates (while most of the qubits have higher times), so we can neglect it here.
 
 
 ## Reinforcement Learning for PQC Structure Search
@@ -94,10 +94,10 @@ Reinforcement Learning (RL) is a framework where an **agent** learns to make dec
 
 This paradigm has been successfully applied to complex tasks, such as mastering Atari games from raw pixels — where agents trained purely via RL achieved human-level performance. [^atari]
 
-In our case, we use RL to **automate the discovery of quantum circuits ansatz**, treating each gate placement as a decision made by the agent.
+In our case, we use RL to **automate the discovery of quantum circuit ansatz**, treating each gate placement as a decision made by the agent.
 
 
-In this framework, building PQCs becomes a **sequential decision problem**, with neural network acting as the agent exploring certain (partially observable) Markov Decision Process (MDP). It shall be noted that *choosing random action* is a strategy, which can produce some good solutions. With RL we aim to explore space in better way; to produce good solutions most of the time or find better one hardly achievable for random search. The latter is achieved in similar work that appeared recently[^rl-architecture-search].
+In this framework, building PQCs becomes a **sequential decision problem**, with a neural network acting as the agent exploring certain (partially observable) Markov Decision Process (MDP). It shall be noted that *choosing random action* is a strategy, which can produce some good solutions. With RL we aim to explore space more efficiently; to produce good solutions most of the time or find better one hardly achievable for random search. The latter is achieved in similar work that appeared recently[^rl-architecture-search].
 
 
 ### RL Theory: Value Functions and the Bellman Equation
@@ -137,13 +137,13 @@ The loss function is constructed based on the Bellman equation:
 $$
 \mathcal{L}(\theta) = \left(Q(s,a;\theta) - \left[R + \gamma \max_{a'} Q(s',a';\theta^-)\right]\right)^2,
 $$
-for any step **except last one**, where we need to manually set future prediction to 0.
+for any step **except the last one**, where we need to manually set future prediction to 0.
 
 This loss function measures how far our current prediction is from the optimal value update — it's often referred to as the *temporal-difference error* in the literature. However in this vanilla form training would not be stable as consecutive updates will be highly correlated.
 
 Key techniques implemented in project are:
 
-- **Experience Replay**: help breaking correlations by storing recent transitions and sampling them randomly when training.
+- **Experience Replay**: helps break correlations by storing recent transitions and sampling them randomly when training.
 - **Target Networks**: using a delayed copy of the network $\theta^-$ to provide stable target.
 - **Exploration strategy**: **epsilon-greedy** phase, in which with some probability (than is appropriately scheduled during training) random action is taken to steer exploration.
 
@@ -201,7 +201,7 @@ Below we demonstrate some examples of circuit layouts, scores achieved on previo
 | Wine           | 178      | 13        | 3        | 0.85          |
 | Breast Cancer  | 569      | 30        | 2        | 0.62          |
 
-*Table&nbsp;1 – Used datasets statistics and the final test accuracy of the found circuits.*
+*Table&nbsp;1 – Datasets statistics and the final test accuracy of the found circuits.*
 
 ---
 
@@ -244,28 +244,28 @@ Below we demonstrate some examples of circuit layouts, scores achieved on previo
 <img src="results/wine/wine_20250526_172332/avg_reward_rewards_wine_20250526_172332.png" width="100%"> 
 <img src="results/breast/breast_cancer_20250526_175042/avg_reward_rewards_breast_cancer_20250526_175042.png" width="100%"> </p>
 
-*Fig.&nbsp;3 – Episode-average rewards across all episodes, Iris, Wine, Breast Cancer, respectively. Dashed lines separate random/e-greedy/deterministic phases. Note that while plot for breast cancer seems like improvement the circuit found perform poorly.*
+*Fig.&nbsp;3 – Episode-average rewards across all episodes, Iris, Wine, Breast Cancer, respectively. Dashed lines separate random/e-greedy/deterministic phases. Note that while plot for Breast Cancer may seems like good try, the circuit found performs poorly.*
 
 
 ## Lessons & Conclusions
 **Automatic architecture search - even random - can be feasible.**
-We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations shows, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we usually satisfied with *good enough* solutions.
+We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations shows, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we are usually satisfied with *good enough* solutions.
 
 **Computation cost is dominated by quantum simulation.** 
-Training over 50000 epochs (which is not that much in context of RL) requires 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires ≈2 000 state-vector simulations. Scaling to larger qubit counts or deeper circuits will become a challenge and therefore require parallel experience collection and multi-GPU (or multi-node) distributed simulations, all of which LUMI’s architecture can support. In general, we can expect that quantum simulations will be bottleneck in the  development of hybrid-quantum algorithms.   
+Training over 50000 epochs (which is not that much in context of RL) requires 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires ≈2 000 state-vector simulations. Scaling to larger qubit counts or deeper circuits will become a challenge and therefore require parallel experience collection and multi-GPU (or multi-node) distributed simulations, all of which LUMI’s architecture can support. In general, we can expect that quantum simulations will be the bottleneck in the  development of hybrid-quantum algorithms.   
 <!-- Due to hardeness of quantum simulation first approach may be apporximation methods (mcmc ?, tensor networks?) -->
 <!-- but small circuits up to soft boundary of 20 qubits does not benefit much as GPU speedup is killed by overheads, for small circuits default python non-optimized device is a good choice.
 -possible project road -> pc simulation, cluster simulation, (scallable) qunatum at the end -->
 
-**Check you quantum software** We found that Pennylane backend simulators do not support vector-state distribution on multiple AMD GPUs available on LUMI, but only for Nvidia GPU. We highlight importance of studying software and integration with different providers beforehand to avoid potential problems.  
+**Check your quantum software** We found that Pennylane backend simulators do not support vector-state distribution on multiple AMD GPUs available on LUMI, but for NVIDIA GPUs only. We highlight importance of studying software and integration with different providers beforehand to avoid potential problems.  
 
 **Containerization of project**.
-To keep HPC infrastructure efficient only minimal setup is available for user without special privileges. *Contenarization* - of project provide a convenient solution and can simplify workflow. 
+To keep HPC infrastructure efficient only minimal setup is available for user without special privileges. *Containerization* of project provides a convenient solution to deal with installation and setup simplifying workflow. 
 For example scheduling work in this project required only setting a few environmental variables and running proper sbatch script; most of extra steps that are often required for setup can be encapsulated within container definition.  This  approach does not rely on software installed on LUMI and can be customized for specific needs, while providing high level of control, resembling root privileges.
 
 
 
-## Ackowledges
+## Acknowledgements
 We thank Nicolaus Copernicus Astronomical Center of the Polish Academy of Sciences in Warsaw for providing early version of code. [CAMK](https://www.camk.edu.pl/en/)
 
 
