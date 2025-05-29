@@ -1,9 +1,9 @@
-# Reinforcement-Learning-Assisted Search for Quantum-Machine-Learning Circuit Architectures
+# Reinforcement Learning Assisted Search for Quantum Machine Learning Circuits Architectures
 
-*Classical machine learning (ML) models for classification typically learn to map input features $x$ to output scores $f(x)$ (often interpreted as unnormalized probabilities), using ansatz function approximations such as neural networks. While effective in many domains, classical models are inherently limited by their computational space. In contrast, quantum computing leverages the exponential growth of the state space of a quantum system. An $n$-qubit system spans a Hilbert space of dimension $2^n$. Such exponential scaling offers a promising route to capture and process complex data patterns more efficiently and is an active area of research.*
+*Classical machine learning (ML) models for classification typically learn to map input features $x$ to output scores $f(x)$ (often interpreted as unnormalized probabilities), using function approximations such as neural networks. While effective in many domains, classical models are inherently limited by their computational space. In contrast, quantum computing leverages the exponential growth of the state space of a quantum system. An $n$-qubit system spans a Hilbert space of dimension $2^n$. Such exponential scaling offers a promising route to capture and process complex data patterns more efficiently. Exploration of that field is an active area of research.*
 
 Utilization of Reinforcement Learning (RL) for Parametrized Quantum Circuits (PQCs) creation is currently being explored in the literature [^ostaszewski] [^rl-architecture-search].
-We have set a goal of implementing a search algorithm based on RL capable of finding an efficient PQC ansatz; feasible for performing classification, while incorporating real hardware restrictions like coupling map and built-in gate set. We tested the approach on several  datasets from the sklearn package.
+We have set a goal of implementing a search algorithm based on RL capable of finding an efficient PQC ansatz; feasible for performing classification, while incorporating real hardware restrictions like coupling map and built-in gate set. We tested the approach on several datasets from the **scikit-learn** package.
 <!-- We could also easily test obtained result on a real accesible quantum hardware but there is not time :( -->
 
 ## Supervised Quantum Machine Learning with PQCs
@@ -97,7 +97,7 @@ This paradigm has been successfully applied to complex tasks, such as mastering 
 In our case, we use RL to **automate the discovery of quantum circuit ansatz**, treating each gate placement as a decision made by the agent.
 
 
-In this framework, building PQCs becomes a **sequential decision problem**, with a neural network acting as the agent exploring certain (partially observable) Markov Decision Process (MDP). It shall be noted that *choosing random action* is a strategy, which can produce some good solutions. With RL we aim to explore space more efficiently; to produce good solutions most of the time or find better one hardly achievable for random search. The latter is achieved in similar work that appeared recently[^rl-architecture-search].
+In this framework, building PQCs becomes a **sequential decision problem**, with a neural network acting as the agent exploring certain (partially observable) Markov Decision Process (MDP). It shall be noted that *choosing random action* is a good strategy, which can produce some good solutions. With RL we aim to explore space more efficiently; to produce good solutions most of the time or find better one hardly achievable for random search. The latter was achieved in similar works that appeared recently[^rl-architecture-search].
 
 
 ### RL Theory: Value Functions and the Bellman Equation
@@ -110,7 +110,7 @@ The common mathematical foundation of RL is the **Markov Decision Process (MDP)*
 - **Reward function** $R(s,a,s')$
 - **Discount factor** $\gamma \in [0,1]$
 
-The **discount factor** $\gamma$ determines how much the agent values **future rewards** over immediate ones. A value close to 1 means long-term rewards are important; a smaller $\gamma$ makes the agent short-sighted.
+The **discount factor** $\gamma$ determines how much the agent values future rewards over immediate ones. A value close to 1 means long-term rewards are important; a smaller $\gamma$ makes the agent short-sighted.
 
 To calculate how good a strategy (policy) is, we define:
 
@@ -249,7 +249,7 @@ Below we demonstrate some examples of circuit layouts, scores achieved on previo
 
 ## Lessons & Conclusions
 **Automatic architecture search - even random - can be feasible.**
-We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations shows, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we are usually satisfied with *good enough* solutions.
+We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations show, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we are usually satisfied with *good enough* solutions.
 
 **Computation cost is dominated by quantum simulation.** 
 Training over 50000 epochs (which is not that much in context of RL) requires 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires ≈2 000 state-vector simulations. Scaling to larger qubit counts or deeper circuits will become a challenge and therefore require parallel experience collection and multi-GPU (or multi-node) distributed simulations, all of which LUMI’s architecture can support. In general, we can expect that quantum simulations will be the bottleneck in the  development of hybrid-quantum algorithms.   
@@ -260,7 +260,7 @@ Training over 50000 epochs (which is not that much in context of RL) requires 1-
 **Check your quantum software** We found that Pennylane backend simulators do not support vector-state distribution on multiple AMD GPUs available on LUMI, but for NVIDIA GPUs only. We highlight importance of studying software and integration with different providers beforehand to avoid potential problems.  
 
 **Containerization of project**.
-To keep HPC infrastructure efficient only minimal setup is available for user without special privileges. *Containerization* of project provides a convenient solution to deal with installation and setup simplifying workflow. 
+To keep HPC infrastructure efficient only minimal setup is available for user without special privileges. *Containerization* of the project provides a convenient solution to deal with installation and setup simplifying workflow. 
 For example scheduling work in this project required only setting a few environmental variables and running proper sbatch script; most of extra steps that are often required for setup can be encapsulated within container definition.  This  approach does not rely on software installed on LUMI and can be customized for specific needs, while providing high level of control, resembling root privileges.
 
 
