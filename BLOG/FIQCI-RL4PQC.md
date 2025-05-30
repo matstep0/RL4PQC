@@ -145,22 +145,6 @@ Key techniques implemented in project are:
 - **Exploration strategy**: **epsilon-greedy** phase, in which with some probability (than is appropriately scheduled during training) random action is taken to steer exploration.
 
 
-
-
-<!-- do i really need this section? --
-!!!![add short desription of not implemented: moving threshold [^ostaszewski] , paralerization of RL training (multithreding and integration), double DQN, (conclude that in general final performace of ML is effect of many implemented improvements and heavy experimentation) ]
-
-## What to be improved
-While our vanilla DQN agent provides a solid proof-of-concept for automated PQC structure search, a number of advanced RL techniques— not contained in our implementation are potentially need improve performance, we shortly desribe s of them:
-
-Moving threshold  [@ostaszewski]. 
-
-Parallelized Experience Collectionmention that this optimization is very feasible to implement on lumi suitable for LUMI  with possibilities of multithreading on cpu or gpus  and even for multiple nodes simulation when in need to simulate more than few qubits. [text bf this] 
-
-
-In practice, achieving state-of-the-art performance in ML requires a careful orchestration of many methods along with extensive experimentation on hyperparameter tuning and often code profiling. Testing and comparing these enhancements will bring us closer to fully automated, high-performance quantum circuit design.
--->
-
 ## Experimental Setup
 In this experiment, we conducted many trials using three distinct toy datasets. Each dataset is split into train/test parts. Test dataset is held out and only training part is fed into simulation. This part is further split into training/validation set. The training part is used for circuit parameters optimization, while validation to estimate accuracy of circuit determining scalar reward passed to agent. Due to high simulation cost, we subsample the training and validation sets at each step. Despite this may reduce accuracy or performance efficiently-driven solutions are important aspect, if subset is *sufficiently big* it hopefully represent, whole set *sufficiently good*. 
 The datasets used were:  *Iris* (150 samples, 4 features), *Wine* (178 samples, 13 features) and *Breast Cancer* (569 samples, 30 features).
@@ -247,6 +231,9 @@ Below we demonstrate some examples of circuit layouts, scores achieved on previo
 ## Some Lessons 
 **Automatic architecture search - even random - can be feasible.**
 We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations show, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we are usually satisfied with *good enough* solutions.
+
+**Success in AI training is not guaranteed**
+There is a substantial difference between implementing an AI model and training it. Overall success comes from heavy experimentation and additional improvements added to vanilla model. While there are some general guidelines, a lot may depend on specific problem. In context of the project, we suspect that training was too short or reward modeling was not sufficient to achieve satisfactory result from RL perspective. How to validate ML model and training process (by human) is an open question, while in our case plotting average rewards reveal some of dynamics it is not trivial to interpret it. It is also good to compare with other baselines, which often already show good performance.
 
 **LUMI is natural fit for Quantum-AI workloads** 
 Training over 50000 epochs (which is not that much in context of RL) take 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires already ≈2 000 state-vector simulations. Overall with calculating gradient it becomes quite heavy cost, which was reason for use of subsampling. Scaling to larger qubit number becomes a challenge and execution time grows linearly with circuit's depth. We can approach it with both parallelization on the level of state-vector simulation (with CPU and GPU) and experience production (multithreading), all of which LUMI can support. Possible scenario could assume independent experiments on different nodes, each supporting distributed state-vector simulation.
