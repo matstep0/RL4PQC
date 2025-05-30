@@ -42,8 +42,6 @@ Any unitary $U(x,\theta)$ must be decomposed into a sequence of these simple gat
 Let's estimate practical circuit depth limitations due to the accumulation of errors, particularly from two-qubit gate infidelity. Numerical values refer to [^vtt2024].
 
 
- 
-
 ### Fidelity Decay 
 Following the simplest error model, assume *uncorrelated stochastic errors*, where the total circuit fidelity is given by[^vadali]:
 
@@ -78,7 +76,7 @@ Thus, after approximately 14 two-qubit gates, fidelity drops below 50%, making t
 <!--Since PQCs typically involve both single-qubit and two-qubit gates, assuming a roughly uniform distribution on typical circuit, we conclude that circuits on Helmi should be shallow circuit of ~20 total gates in total.-->
 
 There is another important factor due to qubit's relaxation times. 
-However, in the worst case scenario for the middle Q3 qubit, the worst decoherence time is $\approx 10\mu s$, while gate execution time is around $100-120$ ns. It is still giving much softer limits on $~80$ gates (while most of the qubits have higher times), so we can neglect it here.
+However, in the worst case scenario for the middle Q3 qubit, the worst decoherence time is $\approx 10\mu s$, while gate execution time is around $100-120$ ns. It is still giving much softer limits on $~80$ gates (while most of the qubits have higher times), so we neglect it here.
 
 
 ## Reinforcement Learning for PQC Structure Search
@@ -98,7 +96,6 @@ In our case, we use RL to **automate the discovery of quantum circuit ansatz**, 
 
 
 In this framework, building PQCs becomes a **sequential decision problem**, with a neural network acting as the agent exploring certain (partially observable) Markov Decision Process (MDP). It shall be noted that *choosing random action* is a good strategy, which can produce some good solutions. With RL we aim to explore space more efficiently; to produce good solutions most of the time or find better one hardly achievable for random search. The latter was achieved in similar works that appeared recently[^rl-architecture-search].
-
 
 ### RL Theory: Value Functions and the Bellman Equation
 
@@ -165,7 +162,7 @@ In practice, achieving state-of-the-art performance in ML requires a careful orc
 -->
 
 ## Experimental Setup
-In this experiment, we conducted many trials using three distinct toy datasets. Each dataset is split into train/test parts. Test dataset is held out and only training part is fed into simulation. Train part is further split into training/validation set. The training part is used for circuit parameters optimization, while validation to estimate accuracy of circuit determining scalar reward passed to agent. Due to high simulation cost, we subsample the training and validation sets at each step. Despite this may reduce accuracy or performance efficiently-driven solutions are important aspect, if subset is *sufficiently big* it hopefully represent, whole set *sufficiently good*. 
+In this experiment, we conducted many trials using three distinct toy datasets. Each dataset is split into train/test parts. Test dataset is held out and only training part is fed into simulation. This part is further split into training/validation set. The training part is used for circuit parameters optimization, while validation to estimate accuracy of circuit determining scalar reward passed to agent. Due to high simulation cost, we subsample the training and validation sets at each step. Despite this may reduce accuracy or performance efficiently-driven solutions are important aspect, if subset is *sufficiently big* it hopefully represent, whole set *sufficiently good*. 
 The datasets used were:  *Iris* (150 samples, 4 features), *Wine* (178 samples, 13 features) and *Breast Cancer* (569 samples, 30 features).
 
 At the beginning of each episode, the environment resets itself to state representing empty circuit. With each step PQC grows one gate at a time up to maximum length $n$ -> 10/15. 
@@ -180,7 +177,7 @@ Each **action** in the agent’s action space corresponding to adding either:
 2. A **two-qubit CZ** gate which does not take any parameters.
 
 To involve exploration, training proceeds in three consecutive phases.
-- **Random benchmark**: for a fixed number of episodes, the agent picks every action uniformly at random. All resulting transitions populate the initial replay buffer and serve as comparison baseline.
+- **Random benchmark**: the agent picks every action uniformly at random. All resulting transitions populate the initial replay buffer and serve as comparison baseline.
 
 - **ε-Greedy learning:** we anneal ε linearly from 1.0 to 0.01, mixing exploration (random actions) with exploitation (choosing the highest-Q action) and updating the Deep Q-Network online after each episode (sampling from experience buffer).
 
@@ -247,22 +244,21 @@ Below we demonstrate some examples of circuit layouts, scores achieved on previo
 *Fig.&nbsp;3 – Episode-average rewards across all episodes, Iris, Wine, Breast Cancer, respectively. Dashed lines separate random/e-greedy/deterministic phases. Note that while plot for Breast Cancer may seems like good try, the circuit found performs poorly.*
 
 
-## Lessons & Conclusions
+## Some Lessons 
 **Automatic architecture search - even random - can be feasible.**
 We demonstrated that automated, hardware‑aware architecture search can provide some useful results. By incorporating Helmi's star topology and native CZ/PRX gate set directly in the action space, our RL‑driven search produces circuits executable on the device. State-vector simulations show, that even shallow circuits can solve simple tasks. This could potentially serve as **benchmark** procedure for current and near-term hardware.  While some accuracy loss is expected on the real chip, QML models may exhibit natural tolerance to noise. In ML, we are usually satisfied with *good enough* solutions.
 
-**Computation cost is dominated by quantum simulation.** 
-Training over 50000 epochs (which is not that much in context of RL) requires 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires ≈2 000 state-vector simulations. Scaling to larger qubit counts or deeper circuits will become a challenge and therefore require parallel experience collection and multi-GPU (or multi-node) distributed simulations, all of which LUMI’s architecture can support. In general, we can expect that quantum simulations will be the bottleneck in the  development of hybrid-quantum algorithms.   
+**LUMI is natural fit for Quantum-AI workloads** 
+Training over 50000 epochs (which is not that much in context of RL) take 1-2 days on a single CPU. Upon profiling, computation time is dominated by the quantum simulator. Each epoch runs the circuit on every data point (≈200 for Iris), so a 10-gate *single episode* requires already ≈2 000 state-vector simulations. Overall with calculating gradient it becomes quite heavy cost, which was reason for use of subsampling. Scaling to larger qubit number becomes a challenge and execution time grows linearly with circuit's depth. We can approach it with both parallelization on the level of state-vector simulation (with CPU and GPU) and experience production (multithreading), all of which LUMI can support. Possible scenario could assume independent experiments on different nodes, each supporting distributed state-vector simulation.
 <!-- Due to hardeness of quantum simulation first approach may be apporximation methods (mcmc ?, tensor networks?) -->
 <!-- but small circuits up to soft boundary of 20 qubits does not benefit much as GPU speedup is killed by overheads, for small circuits default python non-optimized device is a good choice.
 -possible project road -> pc simulation, cluster simulation, (scallable) qunatum at the end -->
 
 **Check your quantum software** We found that Pennylane backend simulators do not support vector-state distribution on multiple AMD GPUs available on LUMI, but for NVIDIA GPUs only. We highlight importance of studying software and integration with different providers beforehand to avoid potential problems.  
 
-**Containerization of project**.
+**Containerize your project**.
 To keep HPC infrastructure efficient only minimal setup is available for user without special privileges. *Containerization* of the project provides a convenient solution to deal with installation and setup simplifying workflow. 
 For example scheduling work in this project required only setting a few environmental variables and running proper sbatch script; most of extra steps that are often required for setup can be encapsulated within container definition.  This  approach does not rely on software installed on LUMI and can be customized for specific needs, while providing high level of control, resembling root privileges.
-
 
 
 ## Acknowledgements
