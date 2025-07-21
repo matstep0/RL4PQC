@@ -1,0 +1,7 @@
+```mermaid
+graph LR
+    A(Agent) -- Action --> B(Environment)
+    B -- State --> A
+    B -- Reward --> A
+    A -- Update Policy --> A
+```
