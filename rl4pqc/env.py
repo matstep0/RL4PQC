@@ -154,6 +154,7 @@ class QuantumCircuitEnv(gym.Env):
     def state_to_box(self, state):
         """Implement box representation of a quantum circuit suitable for NN. 
         #Proof of concept is for representing circuits as boxes https://arxiv.org/pdf/2103.16089 """
+        # Representation is ambiguous (0,0,0 actually represent a gate.. and lame cause (only gate type and one-qubit is )
         ic(state)
         box_state = np.zeros((self.max_gates, 3), dtype=int)  #each column represent a gate 
         # 0 - gate type as int, 1 - control qubit, 2 - target qubit
