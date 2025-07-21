@@ -1,5 +1,6 @@
 from itertools import product, combinations
 from random import Random
+import json 
 
 import pennylane as qml
 
@@ -170,6 +171,7 @@ class RandomPQCGenerator:
     def to_qc(self, x, t, parameter_type='default'):
         """type: 'default' for preserving tensors with gradient tracking, 'numeric' for converting to numpy numbers for PyZX compatibility"""
         
+
         #no longer PyZX in the project, can it be safely removed?
         phi_values = {}
         for i, x_val in enumerate(x):
@@ -222,22 +224,19 @@ class RandomPQCGenerator:
           - `filepath`, pointing to a JSON file with that same format.
         If both are provided, `circuit` takes precedence.
         """
-        #Loading from file not tested.
         if circuit is None:
             if filepath is None:
                 raise ValueError("Must provide either `circuit` or `filepath`")
             with open(filepath, 'r') as f:
-                circuit = json.load(f)
-
+                data = json.load(f)
+                circuit = data['circuit']
         # Reset if anything exist 
         self.reset()
-
         for gate_type, args, wires in circuit:
             constructor = self.pqg_sampler.native_ops[gate_type]['fun']
             self.PQC.append({"constructor": constructor,
                             "args": args,
                             "wires": wires})
-
             # Remove any t_* symbols from the sampler queue
             if isinstance(args, list):
                 for sym in args:
@@ -246,5 +245,4 @@ class RandomPQCGenerator:
                             self.pqg_sampler.t_queue.remove(sym)
                         except ValueError:
                             warnings.warn(f"Symbol {sym} was not in queue")
-
         return self
