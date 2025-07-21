@@ -52,6 +52,7 @@ class PQCEvaluator():
                 current_seed += 1
         self.my_seed_gen = seed_generator(self.seed)
 
+
         # Initialize the quantum device
         ## Check if the device name is one of the default devices
         if device_name not in qml_devs:
@@ -170,8 +171,13 @@ class PQCEvaluator():
         """
         Compute accuracy on the given dataset.
         """
+        # Ensure y is a torch tensor of type long
+        if not isinstance(y, torch.Tensor):
+            y = torch.tensor(y, dtype=torch.long)
+        else:
+            y = y.long()
         with torch.no_grad():
-            acc = torch.sum(self.predict(X) == y.long()) / len(y)
+            acc = torch.sum(self.predict(X) == y) / len(y)
         return acc.item()
 
     #Consider non obligatory validation_data argument
