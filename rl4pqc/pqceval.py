@@ -234,6 +234,9 @@ class PQCEvaluator():
             # Training
             train_loss = 0
 
+            # Future-fix: on zero epochs value of loss is lost , it would be usefull to now starting values of loss? 
+            # Should validation loss should be calculated first?
+
             #consider using single batch at time
             for batch in train_dataloader:
                 loss = self.train_step(batch[0], batch[1])
